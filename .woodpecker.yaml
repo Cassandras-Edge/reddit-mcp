@@ -1,0 +1,69 @@
+when:
+  - event: [push, pull_request]
+
+steps:
+  # ── Deploy: Docker image via BuildKit (push to main only) ──
+
+  - name: build-backend
+    image: moby/buildkit:v0.21.1
+    when:
+      - event: push
+        branch: main
+    environment:
+      AUTH_YAML_CONTENT:
+        from_secret: auth_yaml
+      GITHUB_TOKEN:
+        from_secret: github_token
+    commands:
+      - >
+        buildctl
+        --addr tcp://buildkitd.infra.svc.cluster.local:1234
+        build
+        --frontend dockerfile.v0
+        --local context=backend
+        --local dockerfile=backend
+        --opt "build-arg:AUTH_YAML_CONTENT=$AUTH_YAML_CONTENT"
+        --opt "build-arg:GITHUB_TOKEN=$GITHUB_TOKEN"
+        --output type=image,name=registry.infra.svc.cluster.local:5000/reddit-mcp:latest,push=true,registry.insecure=true
+
+  - name: restart-deployment
+    image: moby/buildkit:v0.21.1
+    when:
+      - event: push
+        branch: main
+    commands:
+      - |
+        apk add --no-cache curl
+        TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+        NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        curl -sk -X PATCH \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/strategic-merge-patch+json" \
+          -d "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"kubectl.kubernetes.io/restartedAt\":\"$NOW\"}}}}}" \
+          "https://kubernetes.default.svc/apis/apps/v1/namespaces/production/deployments/reddit-mcp"
+
+  - name: notify-success
+    image: alpine/curl
+    when:
+      - status: success
+    environment:
+      DISCORD_WEBHOOK_URL:
+        from_secret: discord_webhook_url
+    commands:
+      - >
+        curl -sf -H "Content-Type: application/json"
+        -d "{\"embeds\":[{\"title\":\"✅ $CI_REPO #$CI_PIPELINE_NUMBER\",\"description\":\"**Branch:** $CI_COMMIT_BRANCH\n**Commit:** \`$(echo $CI_COMMIT_SHA | cut -c1-7)\`\",\"color\":3066993,\"url\":\"$CI_PIPELINE_URL\"}]}"
+        "$DISCORD_WEBHOOK_URL"
+
+  - name: notify-failure
+    image: alpine/curl
+    when:
+      - status: failure
+    environment:
+      DISCORD_WEBHOOK_URL:
+        from_secret: discord_webhook_url
+    commands:
+      - >
+        curl -sf -H "Content-Type: application/json"
+        -d "{\"embeds\":[{\"title\":\"❌ $CI_REPO #$CI_PIPELINE_NUMBER\",\"description\":\"**Branch:** $CI_COMMIT_BRANCH\n**Commit:** \`$(echo $CI_COMMIT_SHA | cut -c1-7)\`\",\"color\":15158332,\"url\":\"$CI_PIPELINE_URL\"}]}"
+        "$DISCORD_WEBHOOK_URL"
