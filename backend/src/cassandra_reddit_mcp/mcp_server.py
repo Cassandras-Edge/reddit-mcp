@@ -28,7 +28,6 @@ def create_mcp_server(settings: Settings) -> FastMCP:
     if settings.auth_url and settings.auth_secret:
         if (
             settings.workos_client_id
-            and settings.workos_client_secret
             and settings.workos_authkit_domain
             and settings.base_url
         ):
@@ -38,7 +37,6 @@ def create_mcp_server(settings: Settings) -> FastMCP:
                 service_id=SERVICE_ID,
                 base_url=settings.base_url,
                 workos_client_id=settings.workos_client_id,
-                workos_client_secret=settings.workos_client_secret,
                 workos_authkit_domain=settings.workos_authkit_domain,
             )
         else:
