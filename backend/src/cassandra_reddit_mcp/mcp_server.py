@@ -49,6 +49,10 @@ def create_mcp_server(settings: Settings) -> FastMCP:
 
     reddit_client = RedditClient(user_agent=settings.reddit_user_agent)
 
+    # Set fallback so tools work even without lifespan (gateway embedding)
+    from cassandra_reddit_mcp.tools._helpers import set_fallback_client
+    set_fallback_client(reddit_client)
+
     @asynccontextmanager
     async def lifespan(server):
         yield {
