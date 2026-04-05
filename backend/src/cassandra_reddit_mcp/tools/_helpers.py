@@ -8,7 +8,9 @@ from fastmcp.server.context import Context
 from cassandra_reddit_mcp.clients.reddit import RedditClient
 
 
-def get_email(token: AccessToken) -> str:
+def get_email(token: AccessToken | None) -> str:
+    if token is None:
+        return ""
     return token.claims.get("email", "")
 
 
