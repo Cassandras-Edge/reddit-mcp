@@ -67,13 +67,21 @@ def create_mcp_server(settings: Settings) -> FastMCP:
     mcp_kwargs: dict = {
         "name": "Cassandra Reddit",
         "instructions": (
-            "Reddit browsing server for research and discourse analysis. "
-            "Use search to find posts across Reddit or within a subreddit. "
-            "Use get_subreddit to browse a community's posts (hot/new/top/rising). "
-            "Use get_post to read a post with its full comment thread. "
-            "Use get_comment_thread to drill into a specific comment chain. "
-            "All tools are read-only and idempotent. Results are cached — "
-            "re-reading the same post or thread is free."
+            "# Cassandra Reddit\n\n"
+            "Reddit browsing and discourse analysis via public .json endpoints — "
+            "no API credentials, no rate limit fuss. All tools read-only, results cached.\n\n"
+            "## When to use\n"
+            "- **Topic research** — what is a community saying about X?\n"
+            "- **Discourse analysis** — pull full comment threads for sentiment, arguments\n"
+            "- **Community browsing** — hot/new/top/rising posts in a subreddit\n"
+            "- **Deep threads** — drill into specific comment chains\n\n"
+            "## Getting started\n"
+            "Use `search` to find posts across Reddit or within a subreddit. Use "
+            "`get_subreddit` to browse a community. Use `get_post` to read a post with "
+            "its full comment thread. Use `get_comment_thread` to drill deeper.\n\n"
+            "## Discovery\n"
+            "`tags()` → browse categories, `search(query, tags=[...])` → find tools, "
+            "`get_schema(tools=[...])` → see params. Execute via gateway `execute` tool."
         ),
         "lifespan": lifespan,
         "middleware": [acl_mw] if acl_mw._enabled else [],  # noqa: SLF001
