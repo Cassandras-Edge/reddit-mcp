@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Reddit MCP server — subreddit browsing, search, post/comment viewing"
 requires-python = ">=3.12"
 dependencies = [
-    "cassandra-mcp-auth @ git+https://github.com/Cassandras-Edge/cassandra-auth.git@35f70b6#subdirectory=python",
+    "cassandra-mcp-auth @ git+https://github.com/Cassandras-Edge/cassandra-auth.git@14b8a06#subdirectory=python",
     "cryptography>=44.0.0",
     "fastmcp[auth]>=2.12.0",
     "httpx>=0.28.0",
