@@ -24,6 +24,7 @@ class Settings:
     # Server
     host: str
     mcp_port: int
+    code_mode: bool
 
 
 def load_settings() -> Settings:
@@ -37,4 +38,5 @@ def load_settings() -> Settings:
         base_url=os.environ.get("BASE_URL", ""),
         host=os.environ.get("HOST", "0.0.0.0"),
         mcp_port=int(os.environ.get("MCP_PORT", "3004")),
+        code_mode=os.environ.get("CODE_MODE", "true").lower() in ("true", "1", "yes"),
     )
