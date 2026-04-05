@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastmcp import FastMCP
 
+from cassandra_mcp_auth import AclMiddleware
 from cassandra_reddit_mcp.auth import McpKeyAuthProvider, build_auth
 from cassandra_reddit_mcp.clients.reddit import RedditClient
 from cassandra_reddit_mcp.config import Settings
@@ -47,26 +47,18 @@ def create_mcp_server(settings: Settings) -> FastMCP:
             )
             auth_provider = mcp_key_provider
 
-    # Load ACL enforcer from bundled acl.yaml
-    acl_path = Path(settings.auth_yaml_path)
-    enforcer = None
-    if acl_path.exists():
-        from cassandra_reddit_mcp.acl import load_enforcer  # noqa: PLC0415
-
-        enforcer = load_enforcer(acl_path)
-
-    # Reddit client — no credentials needed, uses public .json endpoints
     reddit_client = RedditClient(user_agent=settings.reddit_user_agent)
 
     @asynccontextmanager
     async def lifespan(server):
         yield {
             "reddit_client": reddit_client,
-            "enforcer": enforcer,
         }
         await reddit_client.close()
         if mcp_key_provider is not None:
             mcp_key_provider.close()
+
+    acl_mw = AclMiddleware(service_id=SERVICE_ID, acl_path=settings.auth_yaml_path)
 
     mcp_kwargs: dict = {
         "name": "Cassandra Reddit",
@@ -80,6 +72,7 @@ def create_mcp_server(settings: Settings) -> FastMCP:
             "re-reading the same post or thread is free."
         ),
         "lifespan": lifespan,
+        "middleware": [acl_mw] if acl_mw._enabled else [],  # noqa: SLF001
     }
     if auth_provider:
         mcp_kwargs["auth"] = auth_provider

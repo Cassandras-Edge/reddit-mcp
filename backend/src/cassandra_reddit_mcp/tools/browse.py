@@ -12,7 +12,7 @@ from fastmcp.server.context import Context
 from mcp.types import ToolAnnotations
 
 from cassandra_reddit_mcp.tools._helpers import (
-    check_acl, get_email, get_enforcer, resolve_reddit_client,
+    get_email, resolve_reddit_client,
 )
 
 
@@ -42,7 +42,6 @@ def register(mcp: FastMCP) -> None:
             time_filter: Time window — all, day, hour, month, week, year (default: all).
             limit: Max results (1-100, default 25).
         """
-        check_acl(get_enforcer(ctx), get_email(token), "search")
         client = resolve_reddit_client(ctx)
         limit = max(1, min(limit, 100))
         try:
@@ -83,7 +82,6 @@ def register(mcp: FastMCP) -> None:
                 (default: day). Ignored for hot/new/rising.
             limit: Max posts (1-100, default 25).
         """
-        check_acl(get_enforcer(ctx), get_email(token), "get_subreddit")
         client = resolve_reddit_client(ctx)
         subreddit = subreddit.removeprefix("r/").strip()
         limit = max(1, min(limit, 100))
@@ -115,7 +113,6 @@ def register(mcp: FastMCP) -> None:
                 controversial, old (default: confidence).
             comment_depth: Max reply nesting depth (1-10, default 4).
         """
-        check_acl(get_enforcer(ctx), get_email(token), "get_post")
         client = resolve_reddit_client(ctx)
         comment_depth = max(1, min(comment_depth, 10))
         try:
@@ -148,7 +145,6 @@ def register(mcp: FastMCP) -> None:
             depth: How deep to traverse replies (1-10, default 6).
             context: Number of parent comments to include above (0-8, default 2).
         """
-        check_acl(get_enforcer(ctx), get_email(token), "get_comment_thread")
         client = resolve_reddit_client(ctx)
         depth = max(1, min(depth, 10))
         context = max(0, min(context, 8))
