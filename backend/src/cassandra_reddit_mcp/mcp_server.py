@@ -81,7 +81,7 @@ def create_mcp_server(settings: Settings) -> FastMCP:
             "its full comment thread. Use `get_comment_thread` to drill deeper.\n\n"
             "## Discovery\n"
             "`tags()` → browse categories, `search(query, tags=[...])` → find tools, "
-            "`get_schema(tools=[...])` → see params. Execute via gateway `execute` tool."
+            "`get_schema(tools=[...])` → see params. Execution happens on a SEPARATE server (cassandra-gateway). Do NOT call `execute` here — this server only has discovery tools. Look up tool names/schemas here, then switch to the gateway server to call `execute(code)` with `call_tool(name, args)`."
         ),
         "lifespan": lifespan,
         "middleware": [acl_mw] if acl_mw._enabled else [],  # noqa: SLF001
