@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
 
-from cassandra_mcp_auth import AclMiddleware, DiscoveryTransform
+from cassandra_mcp_auth import AclMiddleware
 from cassandra_reddit_mcp.auth import McpKeyAuthProvider, build_auth
 from cassandra_reddit_mcp.clients.reddit import RedditClient
 from cassandra_reddit_mcp.config import Settings
@@ -77,32 +77,11 @@ def create_mcp_server(settings: Settings) -> FastMCP:
             "- Browsing a subreddit's current posts\n"
             "- Reading a specific discussion thread\n\n"
             "Uses public .json endpoints — no API credentials, results cached. "
-            "All tools are read-only.\n\n"
-            "## How this works\n\n"
-            "This is a DISCOVERY server — it tells you what tools exist and how to "
-            "call them. To actually execute a tool, use the cassandra-gateway server.\n\n"
-            "### Step 1: Find tools (this server)\n"
-            "Call `cass_reddit_search` to look up tools and get their full parameter schemas.\n\n"
-            "```\n"
-            "cass_reddit_search(\n"
-            "  query: str,           # what you're looking for, e.g. 'browse subreddit'\n"
-            "  tags: list[str]=None, # optional tag filter\n"
-            "  detail: str='full',   # 'brief' for names only, 'detailed' for markdown, 'full' for JSON schemas\n"
-            "  limit: int=None       # max results\n"
-            ")\n"
-            "```\n\n"
-            "### Step 2: Execute tools (cassandra-gateway server)\n"
-            "Take the tool name and params from step 1, then call `cass_gateway_run` "
-            "on the cassandra-gateway server:\n\n"
-            "```\n"
-            "cass_gateway_run(code=\"return await call_tool('get_subreddit', {'subreddit': 'wallstreetbets'})\")\n"
-            "```"
+            "All tools are read-only."
         ),
         "lifespan": lifespan,
         "middleware": [acl_mw] if acl_mw._enabled else [],  # noqa: SLF001
     }
-    if settings.code_mode:
-        mcp_kwargs["transforms"] = [DiscoveryTransform(service_id=SERVICE_ID)]
     if auth_provider:
         mcp_kwargs["auth"] = auth_provider
 
