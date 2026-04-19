@@ -13,11 +13,13 @@ COPY pyproject.toml ./
 COPY src ./src
 
 ARG GITHUB_TOKEN=""
-# cassandra-auth-rev: 17f9265 — bump this SHA to force a rebuild of the
-# pinned `cassandra-mcp-auth @ git+...#subdirectory=python` dependency.
-# BuildKit caches this layer on content, so without a bump pip will
-# skip re-resolving main and the image ships with a stale auth lib.
-RUN if [ -n "$GITHUB_TOKEN" ]; then printf 'machine github.com\nlogin x-access-token\npassword %s\n' "$GITHUB_TOKEN" > /root/.netrc && chmod 600 /root/.netrc; fi \
+# Bump CASSANDRA_AUTH_REV to bust BuildKit's layer cache and force pip
+# to re-resolve `cassandra-mcp-auth @ git+...@main`. The SHA flows into
+# the RUN command below (as an echo arg) so changing this ARG changes
+# the command hash — pure comments don't invalidate the cache layer.
+ARG CASSANDRA_AUTH_REV=17f9265
+RUN echo "cassandra-auth-rev=${CASSANDRA_AUTH_REV}" \
+    && if [ -n "$GITHUB_TOKEN" ]; then printf 'machine github.com\nlogin x-access-token\npassword %s\n' "$GITHUB_TOKEN" > /root/.netrc && chmod 600 /root/.netrc; fi \
     && pip install --no-cache-dir "." \
     && rm -f /root/.netrc
 
