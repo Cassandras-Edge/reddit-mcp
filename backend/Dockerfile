@@ -17,7 +17,7 @@ ARG GITHUB_TOKEN=""
 # to re-resolve `cassandra-mcp-auth @ git+...@main`. The SHA flows into
 # the RUN command below (as an echo arg) so changing this ARG changes
 # the command hash — pure comments don't invalidate the cache layer.
-ARG CASSANDRA_AUTH_REV=17f9265
+ARG CASSANDRA_AUTH_REV=fbc8a06
 RUN echo "cassandra-auth-rev=${CASSANDRA_AUTH_REV}" \
     && if [ -n "$GITHUB_TOKEN" ]; then printf 'machine github.com\nlogin x-access-token\npassword %s\n' "$GITHUB_TOKEN" > /root/.netrc && chmod 600 /root/.netrc; fi \
     && pip install --no-cache-dir "." \
